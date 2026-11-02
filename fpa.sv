@@ -1,4 +1,4 @@
-// VERSION: 1.0
+// VERSION: 1.1
 
 /* INSTRUCTIONS
 Design a 4 input floating point adder.  
@@ -60,21 +60,12 @@ module fpa(input  reg clk,
   assign d = D;
 
   // stage 1: find largest exponent
-  logic [1:0] index_largest_exponent; // index for largest exponent. 1 = A, 2 = B, 3 = C, 4 = D
-  always@(*) begin
-    index_largest_exponent = 0;
-    if(b.exponent > a.exponent) begin
-      index_largest_exponent = 1;
-    end
-    
-    if(c.exponent > b.exponent) begin
-      index_largest_exponent = 2;
-    end
-
-    if(d.exponent > c.exponent) begin
-      index_largest_exponent = 3;
-    end
-  end
+  logic [4:0] largest_ab;
+  logic [4:0] largest_cd;
+  logic [4:0] largest_exponent;
+  assign largest_ab = (a.exponent > b.exponent) ? a.exponent : b.exponent;
+  assign largest_cd = (c.exponent > d.exponent) ? c.exponent : d.exponent;
+  assign largest_exponent = (largest_ab > largest_cd) ? largest_ab : largest_cd;
 
   reg [4:0] s2_largest_exponent;
   fp_12b s2_a;
@@ -93,14 +84,7 @@ module fpa(input  reg clk,
     end
 
     else begin
-      case(index_largest_exponent)
-        0: s2_largest_exponent <= a.exponent;
-        1: s2_largest_exponent <= b.exponent;
-        2: s2_largest_exponent <= c.exponent;
-        3: s2_largest_exponent <= d.exponent;
-        default: s2_largest_exponent <= 5'b01111;  // 15
-      endcase
-
+      s2_largest_exponent <= largest_exponent;
       s2_a <= a;
       s2_b <= b;
       s2_c <= c;
